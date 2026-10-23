@@ -1,1 +1,28 @@
 
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Join a Kelmora trip</title>
+</head>
+<body>
+  <h1>You've been invited to a trip</h1>
+  <p>Open Kelmora on your Android phone to join.</p>
+  <a id="open-app" href="#">Open Kelmora</a>
+
+  <script>
+    const token = new URLSearchParams(location.search).get("token");
+    const link = document.getElementById("open-app");
+
+    if (token && /^[a-f0-9]{64}$/i.test(token)) {
+      link.href =
+        `intent://invite?token=${token}` +
+        `#Intent;scheme=kelmora;package=com.sameer.kelmora;end`;
+    } else {
+      link.textContent = "This invitation link is invalid.";
+      link.removeAttribute("href");
+    }
+  </script>
+</body>
+</html>
