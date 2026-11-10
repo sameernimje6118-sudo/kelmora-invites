@@ -1,28 +1,293 @@
-
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Join a Kelmora trip</title>
-</head>
-<body>
-  <h1>You've been invited to a trip</h1>
-  <p>Open Kelmora on your Android phone to join.</p>
-  <a id="open-app" href="#">Open Kelmora</a>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f2eb">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="description" content="You've been invited to join a shared trip on Kelmora. Collaborate on itineraries, track expenses, and travel seamlessly together.">
+  
+  <!-- OpenGraph / Social Cards -->
+  <meta property="og:title" content="You're Invited · Join a Shared Trip on Kelmora">
+  <meta property="og:description" content="Your travel companion saved a place for you. Open Kelmora to view the itinerary and split expenses.">
+  <meta property="og:type" content="website">
 
-  <script>
-    const token = new URLSearchParams(location.search).get("token");
-    const link = document.getElementById("open-app");
+  <title>You're Invited · Kelmora Shared Trips</title>
 
-    if (token && /^[a-f0-9]{64}$/i.test(token)) {
-      link.href =
-        `intent://invite?token=${token}` +
-        `#Intent;scheme=kelmora;package=com.sameer.kelmora;end`;
-    } else {
-      link.textContent = "This invitation link is invalid.";
-      link.removeAttribute("href");
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:italic,wght@0,400;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    * {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      box-sizing: border-box;
     }
+    .serif-display {
+      font-family: 'Instrument Serif', Georgia, serif;
+    }
+    
+    body {
+      background-color: #f7f2eb;
+      background-image: 
+        radial-gradient(at 10% 20%, rgba(204, 120, 89, 0.12) 0px, transparent 50%),
+        radial-gradient(at 90% 80%, rgba(232, 168, 124, 0.15) 0px, transparent 50%),
+        radial-gradient(at 50% 50%, rgba(247, 242, 235, 1) 0px, transparent 100%);
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+
+    /* Boarding pass ticket cutouts */
+    .ticket-edge {
+      position: relative;
+    }
+    .ticket-edge::before, .ticket-edge::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 18px;
+      height: 18px;
+      background: #f7f2eb;
+      border-radius: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+    }
+    .ticket-edge::before {
+      left: -9px;
+      box-shadow: inset -2px 0 3px rgba(0,0,0,0.03);
+    }
+    .ticket-edge::after {
+      right: -9px;
+      box-shadow: inset 2px 0 3px rgba(0,0,0,0.03);
+    }
+
+    /* Ambient shimmer on action button */
+    @keyframes subtle-shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(200%); }
+    }
+    .shimmer-effect {
+      position: relative;
+      overflow: hidden;
+    }
+    .shimmer-effect::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 50%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+      animation: subtle-shimmer 4s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="flex flex-col items-center justify-center p-4 sm:p-6 text-[#292624] selection:bg-[#cc7859]/20 selection:text-[#cc7859]">
+
+  <!-- Outer Card Frame -->
+  <main class="w-full max-w-[400px] my-auto">
+    
+    <!-- Header: Kelmora Brand Inset -->
+    <div class="flex items-center justify-between pb-4 px-2">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-[#cc7859] p-2 flex items-center justify-center shadow-md shadow-[#cc7859]/25">
+          <svg viewBox="0 0 108 108" fill="none" class="w-full h-full" xmlns="http://www.w3.org/2000/svg" aria-label="Kelmora Logo">
+            <path d="M32 74 C41 54 47 54 54 36 C61 54 67 54 76 74" stroke="#F7EFE3" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="54" cy="36" r="5" fill="#F7EFE3"/>
+          </svg>
+        </div>
+        <div>
+          <span class="text-xs font-extrabold tracking-widest uppercase text-[#292624]">KELMORA</span>
+          <span class="block text-[10px] text-[#8c857a] font-medium leading-tight">Shared Trips</span>
+        </div>
+      </div>
+
+      <div id="status-pill" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f1ebe2] text-[11px] font-semibold text-[#6e6457]">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span>Trip Pass</span>
+      </div>
+    </div>
+
+    <!-- MAIN TICKET / INVITATION CONTAINER -->
+    <div class="bg-white rounded-[32px] border border-[#e8ded1] shadow-[0_24px_60px_-12px_rgba(41,38,36,0.08)] overflow-hidden">
+      
+      <!-- VALID INVITATION VIEW -->
+      <div id="view-valid" class="space-y-0">
+        
+        <!-- Top Segment: Companion Greeting & Headline -->
+        <div class="p-6 sm:p-7 text-center space-y-3">
+          
+          <!-- Friend Avatar Duo with Backpack Icon -->
+          <div class="inline-flex items-center justify-center relative my-1">
+            <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-[#cc7859] to-[#e8a87c] p-0.5 shadow-md">
+              <div class="w-full h-full rounded-full bg-[#fbf9f6] flex items-center justify-center text-xl font-bold text-[#cc7859]">
+                🎒
+              </div>
+            </div>
+            <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#292624] text-white flex items-center justify-center text-[10px] font-black border-2 border-white shadow-xs">
+              +1
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <span class="inline-block px-2.5 py-0.5 rounded-full bg-[#fdf5ed] border border-[#f3e3d3] text-[11px] font-bold uppercase tracking-wider text-[#cc7859]">
+              Friend's Trip Invitation
+            </span>
+            <h1 class="serif-display text-[30px] leading-tight font-normal text-[#292624]">
+              You're invited to travel together
+            </h1>
+            <p class="text-xs text-[#8c857a] leading-relaxed max-w-[270px] mx-auto font-normal">
+              Your travel companion saved a place for you. Open Kelmora to join this journey.
+            </p>
+          </div>
+
+        </div>
+
+        <!-- Perforated Ticket Notch Divider -->
+        <div class="ticket-edge relative flex items-center justify-center py-0.5">
+          <div class="w-full border-t border-dashed border-[#e2d8cb]"></div>
+        </div>
+
+        <!-- Middle Segment: Trip Perks Feature Strip -->
+        <div class="px-6 py-5 bg-[#faf6f0]/70 space-y-3">
+          
+          <div class="flex items-center gap-3 text-left">
+            <div class="w-8 h-8 rounded-xl bg-white border border-[#eee4d6] flex items-center justify-center text-sm shrink-0 shadow-xs">
+              🗓️
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="text-xs font-bold text-[#292624]">Shared Live Itinerary</div>
+              <div class="text-[11px] text-[#8c857a] truncate">Co-plan days, stays & flights together</div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 text-left">
+            <div class="w-8 h-8 rounded-xl bg-white border border-[#eee4d6] flex items-center justify-center text-sm shrink-0 shadow-xs">
+              ⚖️
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="text-xs font-bold text-[#292624]">Automated Expense Splits</div>
+              <div class="text-[11px] text-[#8c857a] truncate">Split bills fairly without awkward math</div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 text-left">
+            <div class="w-8 h-8 rounded-xl bg-white border border-[#eee4d6] flex items-center justify-center text-sm shrink-0 shadow-xs">
+              📶
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="text-xs font-bold text-[#292624]">Works Roaming & Offline</div>
+              <div class="text-[11px] text-[#8c857a] truncate">Full trip access even without cell signal</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Bottom Segment: Hero CTA Button & Fallback -->
+        <div class="p-6 pt-4 space-y-3.5 bg-white border-t border-[#f4ece1]">
+          
+          <!-- Primary Kelmora Obsidian Pill Button -->
+          <a id="btn-open-app" href="#" class="shimmer-effect w-full flex items-center justify-between px-6 py-4 rounded-full bg-[#292624] hover:bg-[#3d3733] active:scale-[0.98] text-[#f7f2eb] font-semibold text-xs tracking-wider shadow-xl shadow-black/15 transition-all group">
+            <span class="font-bold text-sm">Accept & Open in Kelmora</span>
+            <div class="w-8 h-8 rounded-full bg-[#cc7859] text-white flex items-center justify-center text-sm font-extrabold group-hover:translate-x-1 transition-transform shadow-xs">
+              →
+            </div>
+          </a>
+
+          <!-- Secondary Store Fallback Link -->
+          <div class="text-center pt-1">
+            <a id="btn-store" href="https://play.google.com/store/apps/details?id=com.sameer.kelmora" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-xs font-semibold text-[#cc7859] hover:text-[#9e4e33] transition-colors">
+              <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M3.609 1.814 13.792 12 3.61 22.186a2.1 2.1 0 0 1-.61-1.486V3.3c0-.568.225-1.096.609-1.486zm11.242 11.245 2.115 2.115-11.83 6.772 9.715-8.887zm2.115-2.118-2.115 2.118-9.715-8.887 11.83 6.769zm1.144 1.144 2.87 1.642c.866.495.866 1.303 0 1.798l-2.87 1.642-2.167-2.541 2.167-2.541z"/></svg>
+              <span>Get Kelmora on Google Play</span>
+              <span class="text-[10px]">↗</span>
+            </a>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- INVALID / EXPIRED INVITATION VIEW (Shown if token is invalid or missing) -->
+      <div id="view-invalid" class="hidden p-7 text-center space-y-5">
+        <div class="w-16 h-16 rounded-full bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center text-2xl mx-auto">
+          ⏳
+        </div>
+        <div class="space-y-1.5">
+          <span class="inline-block px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-[11px] font-bold uppercase tracking-wider text-amber-800">
+            Invitation Expired or Invalid
+          </span>
+          <h2 class="serif-display text-2xl text-[#292624]">Link No Longer Available</h2>
+          <p class="text-xs text-[#8c857a] leading-relaxed max-w-[260px] mx-auto">
+            This invitation link is missing, expired, or was already revoked by the trip owner.
+          </p>
+        </div>
+
+        <div class="text-xs text-[#6e6457] bg-[#faf6f0] p-3.5 rounded-2xl border border-[#eee4d6]">
+          Ask your travel companion to share a new invite link from their trip details screen.
+        </div>
+
+        <div class="pt-2">
+          <a href="https://play.google.com/store/apps/details?id=com.sameer.kelmora" target="_blank" rel="noopener noreferrer" class="w-full flex items-center justify-center px-6 py-3.5 rounded-full bg-[#292624] hover:bg-[#3d3733] text-[#f7f2eb] font-semibold text-xs tracking-wide shadow-md transition-all">
+            Download Kelmora on Google Play →
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Security & Verification Footer -->
+    <div class="pt-4 text-center flex items-center justify-center gap-1.5 text-[11px] text-[#a1988c]">
+      <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6z"/><path d="m9 12 2 2 4-4"/></svg>
+      <span>Cryptographically secure Kelmora invitation</span>
+    </div>
+
+  </main>
+
+  <!-- URL Token Parameter & Intent Logic -->
+  <script>
+    (function initInvite() {
+      const storeUrl = "https://play.google.com/store/apps/details?id=com.sameer.kelmora";
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token");
+
+      const viewValid = document.getElementById("view-valid");
+      const viewInvalid = document.getElementById("view-invalid");
+      const statusPill = document.getElementById("status-pill");
+      const btnOpen = document.getElementById("btn-open-app");
+
+      // Check strictly for 64-hex SHA-256 random token
+      const isValid = token && /^[a-f0-9]{64}$/i.test(token);
+
+      if (isValid) {
+        viewValid.classList.remove("hidden");
+        viewInvalid.classList.add("hidden");
+
+        const intentUrl = 
+          `intent://invite?token=${encodeURIComponent(token)}#Intent;` +
+          `scheme=kelmora;` +
+          `package=com.sameer.kelmora;` +
+          `S.browser_fallback_url=${encodeURIComponent(storeUrl)};end`;
+
+        btnOpen.href = intentUrl;
+
+        // Auto-redirect attempt on Android browsers
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        if (isAndroid) {
+          // Slight delay ensures the page renders first if the intent dialogue takes a second
+          setTimeout(() => {
+            window.location.href = intentUrl;
+          }, 800);
+        }
+      } else {
+        viewValid.classList.add("hidden");
+        viewInvalid.classList.remove("hidden");
+        statusPill.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span><span>Link Inactive</span>';
+        statusPill.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-[11px] font-semibold text-amber-800 border border-amber-200";
+      }
+    })();
   </script>
+
 </body>
 </html>
